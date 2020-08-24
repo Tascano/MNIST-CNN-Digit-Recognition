@@ -7,7 +7,7 @@ click==7.1.1
 cycler==0.10.0
 Flask==1.1.1
 gast==0.2.2
-get==2019.4.13
+
 google-auth==1.11.3
 google-auth-oauthlib==0.4.1
 google-pasta==0.2.0
