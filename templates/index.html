@@ -1,0 +1,187 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <meta charset="utf-8">
+    <title>Hand Written digit Recognition</title>
+<style>
+    .boxitem {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#inputimg {
+    vertical-align: top;
+    border: solid 1px black;
+}
+
+#clearbtn {
+    width: 100%;
+    font-size: medium;
+    display: block;
+}
+
+#predictdigit {
+    width: 196px;
+    height: 196px;
+    line-height: 196px;
+    font-size: 160px;
+    border: solid 1px black;
+    background-color: white;
+    font-family: Century;
+}
+
+</style>
+</head>
+<body>
+    <header>
+        <h1 style="text-align: center;"> Hand Written Digit Recognition with CNN on MNIST Data Model</h1>
+        <p>Steps:</p>
+        <p>1. Draw a digit in the Bigger box</p>
+        <p>2. Wait for the result to load in the smaller box</p>
+    </header>
+    <br><br>
+
+    <div class="w3-center">
+        <div class="boxitem">
+            <canvas id="inputimg" width="300" height="300"></canvas>
+            <button id="clearbtn">Clear</button>
+        </div>
+        
+        <div class="boxitem">
+            <div id="predictdigit"></div>
+            <div >Predicted Digit </div>
+        </div>
+    </div>
+
+    <script >
+    
+
+let cvsIn = document.getElementById("inputimg");
+let ctxIn = cvsIn.getContext('2d');
+let divOut = document.getElementById("predictdigit");
+let svgGraph = null;
+let mouselbtn = false;
+
+
+// initilize
+window.onload = function(){
+    
+    ctxIn.fillStyle = "white";
+    ctxIn.fillRect(0, 0, cvsIn.width, cvsIn.height);
+    ctxIn.lineWidth = 7;
+    ctxIn.lineCap = "round";
+    
+}
+
+// add cavas events
+cvsIn.addEventListener("mousedown", function(e) { 
+
+    if(e.button == 0){
+        let rect = e.target.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        mouselbtn = true;
+        ctxIn.beginPath();
+        ctxIn.moveTo(x, y);
+    }   
+    else if(e.button == 2){
+        onClear();  // right click for clear input
+    }
+});
+cvsIn.addEventListener("mouseup", function(e) { 
+    if(e.button == 0){
+        mouselbtn = false; 
+        onRecognition();
+    }
+});
+cvsIn.addEventListener("mousemove", function(e) {
+    let rect = e.target.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    if(mouselbtn){
+        ctxIn.lineTo(x, y);
+        ctxIn.stroke();
+    }
+});
+
+cvsIn.addEventListener("touchstart", function(e) {
+    // for touch device
+    if (e.targetTouches.length == 1) {
+        let rect = e.target.getBoundingClientRect();
+        let touch = e.targetTouches[0];
+        let x = touch.clientX - rect.left;
+        let y = touch.clientY - rect.top;
+        ctxIn.beginPath();
+        ctxIn.moveTo(x, y);
+    }
+});
+
+cvsIn.addEventListener("touchmove", function(e) {
+    // for touch device
+    if (e.targetTouches.length == 1) {
+        let rect = e.target.getBoundingClientRect();
+        let touch = e.targetTouches[0];
+        let x = touch.clientX - rect.left;
+        let y = touch.clientY - rect.top;
+        ctxIn.lineTo(x, y);
+        ctxIn.stroke();
+        e.preventDefault();
+    }
+});
+
+cvsIn.addEventListener("touchend", function(e) { 
+    // for touch device
+    onRecognition();
+});
+
+// prevent display the contextmenu 
+cvsIn.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
+document.getElementById("clearbtn").onclick = onClear;
+function onClear(){
+    mouselbtn = false;
+    ctxIn.fillStyle = "white";
+    ctxIn.fillRect(0, 0, cvsIn.width, cvsIn.height);
+    ctxIn.fillStyle = "black";
+}
+
+// post data to server for recognition
+function onRecognition() {
+    console.time("time");
+
+    $.ajax({
+            url: './DigitRecognition',
+            type:'POST',
+            data : {img : cvsIn.toDataURL("image/png").replace('data:image/png;base64,','') },
+
+        }).done(function(data) {
+
+            showResult(JSON.parse(data))
+
+        })
+
+    console.timeEnd("time");
+}
+
+
+function showResult(resultJson){
+
+    // show predict digit
+    divOut.textContent = resultJson.predict_digit;
+}
+
+
+ 
+
+
+
+    </script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>   
+    <script src="//d3js.org/d3.v5.min.js"></script>
+    <br><br>
+
+    
+
+</body>
